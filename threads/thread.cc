@@ -96,6 +96,9 @@ Thread::Fork(VoidFunctionPtr func, int arg)
     scheduler->ReadyToRun(this);	// ReadyToRun assumes that interrupts 
 					// are disabled!
     (void) interrupt->SetLevel(oldLevel);
+	
+	// 增加tid机制
+	SetThreadId(AssignTid());
 }    
 
 //----------------------------------------------------------------------
@@ -148,6 +151,9 @@ Thread::Finish ()
     
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
     
+	// 增加tid机制
+	ReturnTid(ThreadId);
+	
     threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
@@ -236,7 +242,7 @@ Thread::Sleep ()
 static void ThreadFinish()    { currentThread->Finish(); }
 static void InterruptEnable() { interrupt->Enable(); }
 void ThreadPrint(int arg){ Thread *t = (Thread *)arg; t->Print(); }
-
+void MyThreadPrint(int arg){Thread *t = (Thread *)arg; t->MyPrint(); }
 //----------------------------------------------------------------------
 // Thread::StackAllocate
 //	Allocate and initialize an execution stack.  The stack is

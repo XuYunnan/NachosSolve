@@ -19,6 +19,35 @@ Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
 
+//----------------------------------------------------------------------
+// 保存tid pool 的结构
+//----------------------------------------------------------------------
+# define MAXTID 256
+bool TidPool[MAXTID];
+extern int AssignTid(){
+	int i;
+	for(i=0;i<MAXTID;i++){
+		if(!TidPool[i]){
+			TidPool[i] = true;
+			return i;
+		}
+	}
+	return -1;
+}
+
+extern void ReturnTid(int tid){
+	TidPool[tid] = false;
+}
+
+//----------------------------------------------------------------------
+// 列出所有threads的信息.
+//----------------------------------------------------------------------
+extern void ListAllThreads(){
+	scheduler->PrintAllInfo();
+}
+
+	
+	
 #ifdef FILESYS_NEEDED
 FileSystem  *fileSystem;
 #endif
@@ -143,6 +172,14 @@ Initialize(int argc, char **argv)
     // object to save its state. 
     currentThread = new Thread("main");		
     currentThread->setStatus(RUNNING);
+	currentThread->SetThreadId(0);
+	TidPool[0] = true;
+	// 初始化TidPool结构，全都赋值成false
+	for(int i=1;i<MAXTID;i++)
+	{
+		TidPool[i] = false;
+	}
+	
 
     interrupt->Enable();
     CallOnUserAbort(Cleanup);			// if user hits ctl-C

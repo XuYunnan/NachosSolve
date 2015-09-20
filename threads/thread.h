@@ -62,6 +62,8 @@ enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
 // external function, dummy routine whose sole job is to call Thread::Print
 extern void ThreadPrint(int arg);	 
 
+extern void MyThreadPrint(int arg);
+
 // The following class defines a "thread control block" -- which
 // represents a single thread of execution.
 //
@@ -101,6 +103,9 @@ class Thread {
     void setStatus(ThreadStatus st) { status = st; }
     char* getName() { return (name); }
     void Print() { printf("%s, ", name); }
+	void MyPrint(){printf("name = %s, tid = %d, status = %d\n",name,ThreadId,status);}
+	void SetThreadId(int id){ThreadId=id;}
+	int GetThreadId(){return ThreadId;}
 
   private:
     // some of the private data for this class is listed above
@@ -114,6 +119,8 @@ class Thread {
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()
+	int UserId;  // user id
+	int ThreadId; // thread id
 
 #ifdef USER_PROGRAM
 // A thread running a user program actually has *two* sets of CPU registers -- 

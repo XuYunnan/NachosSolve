@@ -24,6 +24,8 @@ int testnum = 1;
 //	purposes.
 //----------------------------------------------------------------------
 
+
+// 每个thread上CPU之后，调度算法没有让他下CPU的策略，必须由thread自己交出CPU Yield
 void
 SimpleThread(int which)
 {
@@ -52,6 +54,48 @@ ThreadTest1()
     SimpleThread(0);
 }
 
+
+//----------------------------------------------------------------------
+// 测试最多启动128个线程
+//----------------------------------------------------------------------
+void OneThread(int num)
+{
+	int loop = 2;
+	while(loop--){
+		printf("I am the thread whose tid=%d\n", currentThread->GetThreadId());
+		currentThread->Yield();	
+	}
+}
+
+void RunManyThreadsTest()
+{
+	DEBUG('t', "Entering RunManyThreadsTest");
+	
+	for(int i=1;i<=200;i++)
+	{
+		char name[20] = "forked thread";
+		Thread *t = new Thread(name);
+		//printf("分配了一个线程,tid=%d\n",i,t->GetThreadId());
+		t->Fork(OneThread, i);
+	}
+	currentThread->Yield();
+}
+
+//----------------------------------------------------------------------
+// 测试TS:列出全部线程信息功能
+//----------------------------------------------------------------------
+
+void ListThreadsStatus()
+{
+	for(int i=1;i<=10;i++){
+		ListAllThreads();	
+		Thread *t = new Thread("thread test~");
+		t->Fork(OneThread, i);
+	}
+	currentThread->Yield();
+}
+
+
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -60,13 +104,20 @@ ThreadTest1()
 void
 ThreadTest()
 {
+	// testnum 表示的是测试的号码
     switch (testnum) {
     case 1:
-	ThreadTest1();
-	break;
-    default:
-	printf("No test specified.\n");
-	break;
+		ThreadTest1();
+		break;
+	case 2:
+		RunManyThreadsTest();
+		break;
+	case 3:
+		ListThreadsStatus();
+    	break;
+	default:
+		printf("No test specified.\n");
+		break;
     }
 }
 

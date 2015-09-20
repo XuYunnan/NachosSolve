@@ -54,9 +54,15 @@ void
 Scheduler::ReadyToRun (Thread *thread)
 {
     DEBUG('t', "Putting thread %s on ready list.\n", thread->getName());
-
-    thread->setStatus(READY);
-    readyList->Append((void *)thread);
+	
+	if(readyList->ListLen < 128){
+		//printf("readyList len is %d",readyList->ListLen);
+	    thread->setStatus(READY);
+	    readyList->Append((void *)thread);	
+	}
+	else{
+		printf("线程不能超过128个\n");
+	}
 }
 
 //----------------------------------------------------------------------
@@ -144,4 +150,12 @@ Scheduler::Print()
 {
     printf("Ready list contents:\n");
     readyList->Mapcar((VoidFunctionPtr) ThreadPrint);
+}
+
+void Scheduler::PrintAllInfo(){
+	printf("输出全部的线程的信息:\n");
+	printf("currentthread:\n");
+	currentThread->MyPrint();
+	printf("readyList:\n");
+	readyList->Mapcar((VoidFunctionPtr) MyThreadPrint);
 }

@@ -90,6 +90,7 @@ main(int argc, char **argv)
 #ifdef THREADS
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
       argCount = 1;
+	  // wtf
       switch (argv[0][1]) {
       case 'q':
         testnum = atoi(argv[1]);
