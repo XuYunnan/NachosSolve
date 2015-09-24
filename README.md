@@ -16,10 +16,10 @@ my nachos 3.4 solution
 
 ###Exercise 4  增加全局线程管理机制
 1. 在Nachos中增加对线程数量的限制，使得Nachos中最多能够同时存在128个线程；
-	``` shell
+	```shell
 	./nachos -q 2
 	```
 2. 仿照Linux中PS命令，增加一个功能TS(Threads Status)，能够显示当前系统中所有线程的信息和状态。
-	``` shell
+	```shell
 	./nachos -q 3
 	```

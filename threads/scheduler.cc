@@ -73,6 +73,7 @@ Scheduler::ReadyToRun (Thread *thread)
 //	Thread is removed from the ready list.
 //----------------------------------------------------------------------
 
+// FindNextToRun 找到下一个要运行的线程，我们的调度算法就是对这个进行修改
 Thread *
 Scheduler::FindNextToRun ()
 {
