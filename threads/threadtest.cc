@@ -75,7 +75,9 @@ void RunManyThreadsTest()
 	{
 		char name[20] = "forked thread";
 		Thread *t = new Thread(name);
-		//printf("分配了一个线程,tid=%d\n",i,t->GetThreadId());
+		
+		// 后面产生的线程有更高的优先级.将会被更先运行.
+		t->setYouxianji(i);
 		t->Fork(OneThread, i);
 	}
 	currentThread->Yield();
@@ -97,6 +99,85 @@ void ListThreadsStatus()
 
 
 //----------------------------------------------------------------------
+// 测试抢占式调度
+//----------------------------------------------------------------------
+void SchedTestFunc1(int num)
+{
+	int loop = 5;
+	while(loop--){
+		printf("I am the thread whose tid=%d,youxianji is %d\n", currentThread->GetThreadId(), currentThread->getYouxianji() );
+		currentThread->Yield();	
+	}
+}
+
+void SchedTestFunc2(int num)
+{
+	int counter = 5;
+	int i = 0;
+	while(true){
+		i++;
+		if(i>counter) break;
+		printf("Thread %d whose youxianji is %d is counting %d\n",num,currentThread->getYouxianji(),i);
+		currentThread->Yield();
+	}
+	currentThread->Yield();
+}
+
+void SchedulerTest(){
+	for(int i=1;i<=10;i++){
+		char name[20] = "forked thread";
+		Thread *t = new Thread(name);
+		
+		// 在这里设置优先级
+		t->setYouxianji(10-i);
+		t->Fork(SchedTestFunc2,i);
+	}
+	currentThread->Yield();
+}
+
+//----------------------------------------------------------------------
+// 测试时间片轮转
+//----------------------------------------------------------------------
+
+void TimeSliceThread(int num){
+	int counter = 20;
+	int i = 0;
+	
+	while(true){
+		i++;
+		if(i>counter) break;
+		printf("Thread %d whose youxianji is %d, timeslice left %d,  is counting %d\n",
+				num,
+				currentThread->getYouxianji(),
+				currentThread->getTimeSlice(),
+				i);
+		// 由于是在内核态，我们在这里手动模拟时钟走字
+		interrupt->OneTick();
+		interrupt->OneTick();
+		interrupt->OneTick();
+	}
+	//currentThread->Yield();
+}
+
+
+void TimeSliceSchedulerTest(){
+	int threadnum = 5;
+	for(int i=1;i<=threadnum;i++){
+		char name[20] = "forked thread";
+		Thread *t = new Thread(name);
+		
+		// 在这里设置优先级
+		t->setYouxianji(threadnum-i);
+		
+		// 在这里分配时间片
+		t->addTimeSlice(3);
+		
+		t->Fork(TimeSliceThread,i);
+	}
+	currentThread->Yield();
+}
+
+//----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
 //----------------------------------------------------------------------
@@ -115,6 +196,12 @@ ThreadTest()
 	case 3:
 		ListThreadsStatus();
     	break;
+	case 4:
+		SchedulerTest();
+		break;
+	case 5:
+		TimeSliceSchedulerTest();
+		break;		
 	default:
 		printf("No test specified.\n");
 		break;

@@ -81,7 +81,8 @@ class Thread {
     // THEY MUST be in this position for SWITCH to work.
     int* stackTop;			 // the current stack pointer
     int machineState[MachineStateSize];  // all registers except for stackTop
-
+	int youxianji; // 这个thread的优先级
+	int timeslice; // 时间片
   public:
     Thread(char* debugName);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
@@ -106,6 +107,14 @@ class Thread {
 	void MyPrint(){printf("name = %s, tid = %d, status = %d\n",name,ThreadId,status);}
 	void SetThreadId(int id){ThreadId=id;}
 	int GetThreadId(){return ThreadId;}
+	
+	// 设置优先级的函数
+	void setYouxianji(int p){youxianji = p;}
+	int getYouxianji(){return youxianji;}
+	
+	// 给这个thread分配t时间的时间片
+	void addTimeSlice(int t){timeslice += t;}
+	int getTimeSlice(){return timeslice;}
 
   private:
     // some of the private data for this class is listed above

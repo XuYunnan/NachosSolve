@@ -56,9 +56,16 @@ Scheduler::ReadyToRun (Thread *thread)
     DEBUG('t', "Putting thread %s on ready list.\n", thread->getName());
 	
 	if(readyList->ListLen < 128){
-		//printf("readyList len is %d",readyList->ListLen);
 	    thread->setStatus(READY);
-	    readyList->Append((void *)thread);	
+	    //readyList->Append((void *)thread);
+		readyList->SortedInsert((void *)thread , thread->getYouxianji());
+		
+		/*
+		// 抢占~
+		if(thread != currentThread && currentThread->getYouxianji() > thread->getYouxianji()){
+			currentThread->Yield();
+		}
+		*/
 	}
 	else{
 		printf("线程不能超过128个\n");
@@ -77,7 +84,11 @@ Scheduler::ReadyToRun (Thread *thread)
 Thread *
 Scheduler::FindNextToRun ()
 {
-    return (Thread *)readyList->Remove();
+    //return (Thread *)readyList->Remove();
+	int p;
+	Thread * res = (Thread *)readyList->SortedRemove(&p);	
+	//printf("Find next to run is key %d\n",p);
+	return res;
 }
 
 //----------------------------------------------------------------------
@@ -119,9 +130,7 @@ Scheduler::Run (Thread *nextThread)
     // in switch.s.  You may have to think
     // a bit to figure out what happens after this, both from the point
     // of view of the thread and from the perspective of the "outside world".
-
     SWITCH(oldThread, nextThread);
-    
     DEBUG('t', "Now in thread \"%s\"\n", currentThread->getName());
 
     // If the old thread gave up the processor because it was finishing,
@@ -159,4 +168,15 @@ void Scheduler::PrintAllInfo(){
 	currentThread->MyPrint();
 	printf("readyList:\n");
 	readyList->Mapcar((VoidFunctionPtr) MyThreadPrint);
+}
+
+void Scheduler::minusTimeSlice(Thread * thread){
+	//时间片-1
+	thread->addTimeSlice(-1);
+	//如果时间片已经用完了
+	if(thread->getTimeSlice() <= 0){
+		thread->setYouxianji(thread->getYouxianji() + 10);
+		thread->Yield();
+		thread->addTimeSlice(10);
+	}
 }

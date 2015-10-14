@@ -38,6 +38,8 @@ Thread::Thread(char* threadName)
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
+	youxianji = 255;
+	timeslice = 0;
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -182,16 +184,24 @@ Thread::Yield ()
 {
     Thread *nextThread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-    
+	
     ASSERT(this == currentThread);
     
     DEBUG('t', "Yielding thread \"%s\"\n", getName());
     
     nextThread = scheduler->FindNextToRun();
-    if (nextThread != NULL) {
-	scheduler->ReadyToRun(this);
-	scheduler->Run(nextThread);
+	
+	
+	
+	// yeild之后，只有next优先级数值比this低的时候
+    if (nextThread != currentThread && nextThread->getYouxianji() < this->getYouxianji() && nextThread != NULL) {
+		scheduler->ReadyToRun(this);
+		scheduler->Run(nextThread);
     }
+	else{
+		scheduler->ReadyToRun(nextThread);
+	}
+	
     (void) interrupt->SetLevel(oldLevel);
 }
 

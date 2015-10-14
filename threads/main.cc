@@ -87,8 +87,9 @@ main(int argc, char **argv)
     DEBUG('t', "Entering main");
     (void) Initialize(argc, argv);
     
-	PrintHello();
-	
+	//PrintHello();
+	//printf("hehehehehehehe%d,%s",argc,*argv);
+
 #ifdef THREADS
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
       argCount = 1;
@@ -107,8 +108,11 @@ main(int argc, char **argv)
     ThreadTest();
 #endif
 
+//printf("hehehehehehehe%d,%s",argc,*argv);
+
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
 	argCount = 1;
+	
         if (!strcmp(*argv, "-z"))               // print copyright
             printf (copyright);
 #ifdef USER_PROGRAM

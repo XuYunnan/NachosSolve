@@ -89,8 +89,12 @@ extern void Cleanup();
 static void
 TimerInterruptHandler(int dummy)
 {
+	printf("Called into TimerInterruptHandler\n");
     if (interrupt->getStatus() != IdleMode)
-	interrupt->YieldOnReturn();
+		interrupt->YieldOnReturn();
+	
+	// 当前进程的时间片-1
+	scheduler->minusTimeSlice(currentThread);
 }
 
 //----------------------------------------------------------------------
@@ -163,7 +167,9 @@ Initialize(int argc, char **argv)
     interrupt = new Interrupt;			// start up interrupt handling
     scheduler = new Scheduler();		// initialize the ready queue
     if (randomYield)				// start the timer (if needed)
-	timer = new Timer(TimerInterruptHandler, 0, randomYield);
+		timer = new Timer(TimerInterruptHandler, 0, randomYield);
+
+	Timer *timer1 = new Timer(TimerInterruptHandler,0,true);
 
     threadToBeDestroyed = NULL;
 

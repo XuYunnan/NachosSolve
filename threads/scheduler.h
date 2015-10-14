@@ -29,10 +29,18 @@ class Scheduler {
     void Print();			// Print contents of ready list
 	
 	void PrintAllInfo();    // Print all info of ready list
+	
+	// 减少一个thread的时间片
+	void minusTimeSlice(Thread * thread);
     
   private:
     List *readyList;  		// queue of threads that are ready to run,
 				// but not running
+};
+
+class pList{
+	
+	
 };
 
 #endif // SCHEDULER_H
