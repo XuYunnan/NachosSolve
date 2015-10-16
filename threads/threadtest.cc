@@ -161,7 +161,7 @@ void TimeSliceThread(int num){
 
 
 void TimeSliceSchedulerTest(){
-	int threadnum = 5;
+	int threadnum = 15;
 	for(int i=1;i<=threadnum;i++){
 		char name[20] = "forked thread";
 		Thread *t = new Thread(name);

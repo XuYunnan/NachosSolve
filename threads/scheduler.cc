@@ -176,7 +176,7 @@ void Scheduler::minusTimeSlice(Thread * thread){
 	//如果时间片已经用完了
 	if(thread->getTimeSlice() <= 0){
 		thread->setYouxianji(thread->getYouxianji() + 10);
-		thread->Yield();
+		//thread->Yield();
 		thread->addTimeSlice(10);
 	}
 }

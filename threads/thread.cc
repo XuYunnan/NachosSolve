@@ -156,6 +156,7 @@ Thread::Finish ()
 	// 增加tid机制
 	ReturnTid(ThreadId);
 	
+	if(threadToBeDestroyed != NULL) delete threadToBeDestroyed;
     threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
