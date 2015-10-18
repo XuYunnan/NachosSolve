@@ -195,14 +195,15 @@ Thread::Yield ()
 	
 	
 	// yeild之后，只有next优先级数值比this低的时候
-    if (nextThread != currentThread && nextThread->getYouxianji() < this->getYouxianji() && nextThread != NULL) {
-		scheduler->ReadyToRun(this);
-		scheduler->Run(nextThread);
-    }
-	else{
-		scheduler->ReadyToRun(nextThread);
+	if(nextThread != NULL) {	
+    	if (nextThread != currentThread && nextThread->getYouxianji() < this->getYouxianji()) {
+			scheduler->ReadyToRun(this);
+			scheduler->Run(nextThread);
+    	}
+		else{
+			scheduler->ReadyToRun(nextThread);
+		}
 	}
-	
     (void) interrupt->SetLevel(oldLevel);
 }
 

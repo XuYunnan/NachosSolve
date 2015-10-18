@@ -40,6 +40,13 @@ Semaphore::Semaphore(char* debugName, int initialValue)
     queue = new List;
 }
 
+Semaphore::Semaphore()
+{
+	name = "";
+	value = 1;
+	queue = new List;
+}
+
 //----------------------------------------------------------------------
 // Semaphore::Semaphore
 // 	De-allocate semaphore, when no longer needed.  Assume no one
@@ -100,13 +107,80 @@ Semaphore::V()
 // Dummy functions -- so we can compile our later assignments 
 // Note -- without a correct implementation of Condition::Wait(), 
 // the test case in the network assignment won't work!
-Lock::Lock(char* debugName) {}
-Lock::~Lock() {}
-void Lock::Acquire() {}
-void Lock::Release() {}
+Lock::Lock(char* debugName) {
+	name = debugName;
+	holder = currentThread;
+	locked = false;
+	queue = new List();
+}
 
-Condition::Condition(char* debugName) { }
-Condition::~Condition() { }
-void Condition::Wait(Lock* conditionLock) { ASSERT(FALSE); }
-void Condition::Signal(Lock* conditionLock) { }
-void Condition::Broadcast(Lock* conditionLock) { }
+Lock::Lock(){
+	name = "";
+	holder = currentThread;
+	locked = false;
+	queue = new List();
+}
+
+Lock::~Lock() {delete queue;}
+
+void Lock::Acquire() {
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+	while(locked){
+		queue->Append((void *)currentThread);	// so go to sleep
+		currentThread->Sleep();
+	}
+	holder = currentThread;
+	locked = true;
+	printf("thread %s, get a lock\n",currentThread->getName());
+	(void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+void Lock::Release() {
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+	while(!queue->IsEmpty()){
+		Thread * next = (Thread *)queue->Remove();
+		if(next != NULL)
+			scheduler->ReadyToRun(next);
+	}
+	holder = NULL;
+	locked = false;
+	printf("thread %s, release a lock\n",currentThread->getName());
+	(void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+bool Lock::isHeldByCurrentThread(){
+	return holder == currentThread;
+}
+
+
+Condition::Condition(char* debugName) { name = debugName;queue = new List(); }
+Condition::Condition(){name = ""; queue = new List();}
+Condition::~Condition() { delete queue; }
+
+void Condition::Wait(Lock* conditionLock) {
+	ASSERT(conditionLock->isHeldByCurrentThread());
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+	conditionLock->Release();
+	queue->Append((void *)currentThread);
+	currentThread->Sleep();
+	conditionLock->Acquire();
+	(void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+void Condition::Signal(Lock* conditionLock) {
+	//ASSERT(conditionLock->isHeldByCurrentThread());
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+	Thread * thread = (Thread *)queue->Remove();
+	if(thread)
+		scheduler->ReadyToRun(thread);
+	(void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+void Condition::Broadcast(Lock* conditionLock) {
+	//ASSERT(conditionLock->isHeldByCurrentThread());
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+	while(!queue->IsEmpty()){
+		Thread * thread = (Thread *)queue->Remove();
+		if(thread)
+			scheduler->ReadyToRun(thread);
+	}
+	(void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}

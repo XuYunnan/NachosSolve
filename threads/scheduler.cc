@@ -57,8 +57,8 @@ Scheduler::ReadyToRun (Thread *thread)
 	
 	if(readyList->ListLen < 128){
 	    thread->setStatus(READY);
-	    //readyList->Append((void *)thread);
-		readyList->SortedInsert((void *)thread , thread->getYouxianji());
+	    readyList->Append((void *)thread);
+		//readyList->SortedInsert((void *)thread , thread->getYouxianji());
 		
 		/*
 		// 抢占~
@@ -87,7 +87,8 @@ Scheduler::FindNextToRun ()
     //return (Thread *)readyList->Remove();
 	int p;
 	Thread * res = (Thread *)readyList->SortedRemove(&p);	
-	//printf("Find next to run is key %d\n",p);
+	printf("Find next to run is key %d\n",p);
+	if(p>1000 || p<0) return NULL;
 	return res;
 }
 

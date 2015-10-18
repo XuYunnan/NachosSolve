@@ -39,6 +39,7 @@
 class Semaphore {
   public:
     Semaphore(char* debugName, int initialValue);	// set initial value
+	Semaphore();
     ~Semaphore();   					// de-allocate semaphore
     char* getName() { return name;}			// debugging assist
     
@@ -66,6 +67,7 @@ class Semaphore {
 class Lock {
   public:
     Lock(char* debugName);  		// initialize lock to be FREE
+	Lock();
     ~Lock();				// deallocate lock
     char* getName() { return name; }	// debugging assist
 
@@ -80,6 +82,9 @@ class Lock {
   private:
     char* name;				// for debugging
     // plus some other stuff you'll need to define
+	Thread * holder; // 持有这个Lock的线程
+	bool locked;	// 是否被使用
+	List *queue;	// 等待这个锁的队列
 };
 
 // The following class defines a "condition variable".  A condition
@@ -117,6 +122,7 @@ class Lock {
 class Condition {
   public:
     Condition(char* debugName);		// initialize condition to 
+	Condition();
 					// "no one waiting"
     ~Condition();			// deallocate the condition
     char* getName() { return (name); }
@@ -132,5 +138,6 @@ class Condition {
   private:
     char* name;
     // plus some other stuff you'll need to define
+	List * queue;
 };
 #endif // SYNCH_H

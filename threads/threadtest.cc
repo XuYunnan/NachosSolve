@@ -11,6 +11,7 @@
 
 #include "copyright.h"
 #include "system.h"
+#include "synch.h"
 
 // testnum is set in main.cc
 int testnum = 1;
@@ -178,6 +179,179 @@ void TimeSliceSchedulerTest(){
 }
 
 //----------------------------------------------------------------------
+// 测试同步原语
+//----------------------------------------------------------------------
+
+Lock * lock;
+Condition * cd;
+
+void getLock(int num){
+	lock->Acquire();
+	//currentThread->Yield();
+	lock->Release();
+}
+
+void releaseLock(int num){
+	lock->Release();
+}
+
+void LockTest(){
+	lock = new struct Lock("Lock test");
+	Thread *t1 = new Thread("lock thread 1");
+	Thread *t2 = new Thread("lock thread 2");
+	t1->Fork(getLock,0);
+	//t1->ReleaseLock(0);
+	//t1->Fork(releaseLock,0);
+	t2->Fork(getLock,0);
+	//t2->ReleaseLock(0);
+}
+
+void ConditionWait(int num){
+	lock->Acquire();
+	cd->Wait(lock);
+	cd->Signal(lock);
+}
+
+void ConditionTest(){
+	cd = new struct Condition("Condition test");
+	lock = new struct Lock("Lock test");
+	Thread * t1 = new Thread("condition test thread 1");
+	t1 -> Fork(ConditionWait,0);
+	
+}
+
+Semaphore semNempty("empty", 6);
+Semaphore semNfull("full", 0);
+Semaphore sempool[6];
+bool pool[6] = {0};
+
+void Producer(int arg)
+{
+    while (1) {
+        semNempty.P();
+        int i,j;
+        for (i = 0; i < 6; i++) {
+			sempool[i].P();
+            if (!pool[i]) {
+                pool[i] = true;
+                printf("%s produces %d |", currentThread->getName(), i);
+                sempool[i].V();
+                currentThread->Yield();
+                break;
+            }
+			else{
+				sempool[i].V();
+			}
+        }
+        semNfull.V();
+    }
+}
+
+void Consumer(int arg)
+{
+    while (1) {
+        semNfull.P();
+        int i,j;
+        for (i = 0; i < 6; i++) {
+			sempool[i].P();
+            if (pool[i]) {
+                pool[i] = false;
+                printf("%s consumes %d |", currentThread->getName(), i);
+                sempool[i].V();
+                currentThread->Yield();
+                break;
+            }
+			else{
+				sempool[i].V();
+			}
+        }
+        semNempty.V();
+    }
+}
+
+void PCtest1(){
+	Thread *producer[5], *consumer[3];
+
+	    producer[0] = new Thread("Producer 0");
+	    producer[1] = new Thread("Producer 1");
+	    producer[2] = new Thread("Producer 2");
+	    producer[3] = new Thread("Producer 3");
+	    producer[4] = new Thread("Producer 4");
+	    consumer[0] = new Thread("Consumer 0");
+	    consumer[1] = new Thread("Consumer 1");
+	    consumer[2] = new Thread("Consumer 2");
+
+	for (int i = 0; i < 5; i++) {
+	    producer[i]->Fork(Producer, 0);
+	}
+
+	for (int i = 0; i < 3; i++) {
+	    consumer[i]->Fork(Consumer, 0);
+	}
+}
+
+bool used[5];
+Semaphore metux;
+Condition res[5]; // 0 -> 01, 1-> 12, 2->23, 3->34, 4->40 
+Lock * cdlock[5];	  // 条件变量使用的lock
+
+
+void eat(int arg){
+	metux.P();
+	if(!used[arg] && !used[(arg+1)%5]){
+		used[arg] = 1;
+		used[(arg+1)%5] = 1;
+		printf("ph %d take chopsticks %d and %d , he begins to eat.\n",arg,arg,(arg+1)%5);
+		metux.V();
+	}
+	else{
+		metux.V();
+		cdlock[arg]->Acquire();
+		res[arg].Wait(cdlock[arg]);
+		cdlock[arg]->Release();
+	}
+}
+
+void putChop(int arg){
+	metux.P();
+	printf("ph %d eat up, he put chopsticks %d and %d.\n",arg,arg,(arg+1)%5);
+	used[arg] = 0;
+	used[(arg+1)%5] = 0;
+	
+	for(int i =arg+1;i<arg+6;i++){
+		int k = i%5;
+		if(!used[k] && !used[(k+1)%5])
+			res[k].Signal(cdlock[k]);
+	}
+	metux.V();
+}
+
+
+void Philosopher(int arg){
+	
+	int loop = 5;
+	
+	while(loop --){
+		eat(arg);
+		currentThread->Yield();
+		putChop(arg);
+	}
+}
+
+void PhilosopherTest(){
+	Thread * thread[5];
+	for(int i=0;i<5;i++){
+		used[i] = false;
+		res[i] = Condition();
+		cdlock[i] = new struct Lock();
+	}
+	for(int i=0;i<5;i++){
+		thread[i] = new Thread("hehe");
+		thread[i] -> Fork(Philosopher,i);
+	}
+}
+
+//----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
 //----------------------------------------------------------------------
@@ -202,6 +376,18 @@ ThreadTest()
 	case 5:
 		TimeSliceSchedulerTest();
 		break;		
+	case 6:
+		LockTest();
+		break;
+	case 7:
+		ConditionTest();
+		break;
+	case 8:
+		PCtest1();
+		break;
+	case 9:
+		PhilosopherTest();
+		break;
 	default:
 		printf("No test specified.\n");
 		break;
