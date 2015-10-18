@@ -140,4 +140,21 @@ class Condition {
     // plus some other stuff you'll need to define
 	List * queue;
 };
+
+class RWLock{
+  public:
+	RWLock(){status = 0; metux = Semaphore(); readerNum = 0;}
+	~RWLock(){}
+	void AcquireRLock();
+	void AcquireWLock();
+	void RleaseRLock();
+	void RleaseWLock();	
+  private:
+	int status; // 0 - free; 1 - read ; 2 - write;
+	Semaphore metux;
+	int readerNum;
+};
+
+
+
 #endif // SYNCH_H

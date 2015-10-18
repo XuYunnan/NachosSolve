@@ -351,6 +351,10 @@ void PhilosopherTest(){
 	}
 }
 
+void RWLOCKtest(){
+	
+}
+
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -387,6 +391,9 @@ ThreadTest()
 		break;
 	case 9:
 		PhilosopherTest();
+		break;
+	case 10:
+		RWLOCKtest();
 		break;
 	default:
 		printf("No test specified.\n");

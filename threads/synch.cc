@@ -184,3 +184,37 @@ void Condition::Broadcast(Lock* conditionLock) {
 	}
 	(void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
 }
+
+
+void RWLock::AcquireRLock(){
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);
+	if(status != 1){
+		metux.P();
+	}
+	status = 1;
+	readerNum ++;
+	(void) interrupt->SetLevel(oldLevel);
+}
+void RWLock::AcquireWLock(){
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);
+	metux.P();
+	status = 2;
+	(void) interrupt->SetLevel(oldLevel);
+}
+
+void RWLock::RleaseRLock(){
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);
+	readerNum --;
+	if(readerNum == 0) {
+		status = 0;
+		metux.V();
+	}
+	(void) interrupt->SetLevel(oldLevel);
+}
+
+void RWLock::RleaseWLock(){
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);
+	status = 0;
+	metux.V();
+	(void) interrupt->SetLevel(oldLevel);
+}
