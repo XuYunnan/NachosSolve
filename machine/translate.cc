@@ -198,10 +198,12 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 	DEBUG('a', "alignment problem at %d, size %d!\n", virtAddr, size);
 	return AddressErrorException;
     }
-    
     // we must have either a TLB or a page table, but not both!
-    ASSERT(tlb == NULL || pageTable == NULL);	
-    ASSERT(tlb != NULL || pageTable != NULL);	
+    //if(tlb == NULL) DEBUG('a',"tlb is null !\n");
+	//if(tlb != NULL) DEBUG('a',"tlb is not null!\n");
+	//if(pageTable != NULL) DEBUG('a',"pageTable is not null\n");
+	//ASSERT(tlb == NULL && pageTable == NULL);	
+    //ASSERT(tlb != NULL || pageTable != NULL);	
 
 // calculate the virtual page number, and offset within the page,
 // from the virtual address
@@ -219,9 +221,10 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 	    return PageFaultException;
 	}
 	entry = &pageTable[vpn];
-    } else {
+    } else {   // tlb is not null :
         for (entry = NULL, i = 0; i < TLBSize; i++)
     	    if (tlb[i].valid && (tlb[i].virtualPage == vpn)) {
+				//printf("TLB hit, i is %d\n",i);
 		entry = &tlb[i];			// FOUND!
 		break;
 	    }
@@ -239,10 +242,40 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     }
     pageFrame = entry->physicalPage;
 
+	// 维护LRU算法的hit次数
+	/*
+	printf("\n");
+	for(int i=0;i<64;i++){
+		printf("%d,",pageTable[i].physicalPage);
+	}
+	printf("\n");
+	for(int i=0;i<8;i++){
+		printf("%d:%d->%d, ",tlb[i].virtualPage,tlb[i].physicalPage,tlb[i].hittimes);
+	}
+	printf("\n");
+	for(int i=0;i<8;i++){
+		printf("%d,",machine->VApageList[(head+i)%128]);
+	}
+	printf("\n");
+	printf("list len is %d,vpn is %d\n",machine->VAlistLen(),vpn);
+	*/
+	if(machine->VAlistLen() >= 8){
+		int vap_remove = machine->VAlistpop();
+		for(int i=0;i<TLBSize; i++)
+			if(tlb[i].valid && (tlb[i].virtualPage == vap_remove)){
+				tlb[i].hittimes --;
+				break;
+			}
+	}
+	
+	machine->VAlistAdd(vpn);
+	entry->hittimes ++;
+
     // if the pageFrame is too big, there is something really wrong! 
     // An invalid translation was loaded into the page table or TLB. 
     if (pageFrame >= NumPhysPages) { 
 	DEBUG('a', "*** frame %d > %d!\n", pageFrame, NumPhysPages);
+	printf("vpn %d is %d,phyaddr is%d\n",vpn,pageTable[vpn].valid,pageTable[vpn].physicalPage);
 	return BusErrorException;
     }
     entry->use = TRUE;		// set the use, dirty bits

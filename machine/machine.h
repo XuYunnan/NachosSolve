@@ -25,6 +25,7 @@
 #include "utility.h"
 #include "translate.h"
 #include "disk.h"
+#include "../threads/list.h"
 
 // Definitions related to the size, and format of user memory
 
@@ -32,9 +33,9 @@
 					// the disk sector size, for
 					// simplicity
 
-#define NumPhysPages    32
+#define NumPhysPages    64
 #define MemorySize 	(NumPhysPages * PageSize)
-#define TLBSize		4		// if there is a TLB, make it small
+#define TLBSize		8		// if there is a TLB, make it small
 
 enum ExceptionType { NoException,           // Everything ok!
 		     SyscallException,      // A program executed a system call.
@@ -146,6 +147,7 @@ class Machine {
     void Debugger();		// invoke the user program debugger
     void DumpState();		// print the user CPU and memory state 
 
+	void tlbTrans(int va);
 
 // Data structures -- all of these are accessible to Nachos kernel code.
 // "public" for convenience.
@@ -181,7 +183,14 @@ class Machine {
 
     TranslationEntry *pageTable;
     unsigned int pageTableSize;
-
+	
+	int head;
+	int tail;
+	int VApageList[128]; // 虚拟地址使用页的历史的队列的头和尾
+	int VAlistLen(){return (tail-head+128)%128;}
+	void VAlistAdd(int x){ASSERT(VAlistLen() < 127); VApageList[tail%128] = x; tail = (tail + 1) % 128;}
+	int VAlistpop(){ ASSERT(VAlistLen() >= 0); int ret = VApageList[head%128]; head = (head + 1) % 128;return ret;}
+	
   private:
     bool singleStep;		// drop back into the debugger after each
 				// simulated instruction

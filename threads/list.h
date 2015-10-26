@@ -60,9 +60,10 @@ class List {
 	
 	int ListLen; // length of List
 
-  private:
+//  private:
     ListElement *first;  	// Head of the list, NULL if list is empty
     ListElement *last;		// Last element of list
+	
 };
 
 #endif // LIST_H

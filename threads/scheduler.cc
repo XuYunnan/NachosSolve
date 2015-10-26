@@ -85,6 +85,7 @@ Thread *
 Scheduler::FindNextToRun ()
 {
     //return (Thread *)readyList->Remove();
+	if(readyList->ListLen == 0) return NULL;
 	int p;
 	Thread * res = (Thread *)readyList->SortedRemove(&p);	
 	printf("Find next to run is key %d\n",p);

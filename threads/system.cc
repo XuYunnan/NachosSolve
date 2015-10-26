@@ -89,7 +89,7 @@ extern void Cleanup();
 static void
 TimerInterruptHandler(int dummy)
 {
-	printf("Called into TimerInterruptHandler\n");
+	//printf("Called into TimerInterruptHandler\n");
     if (interrupt->getStatus() != IdleMode)
 		interrupt->YieldOnReturn();
 	
